@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Filtre de résultats FFE (Open HTML)</title>
+    <link rel="stylesheet" href="styles.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+<header>
+    <h1>Filtrer des résultats FFE</h1>
+</header>
+
+<section class="loader">
+    <div class="input-row">
+        <label for="urlInput">Lien FFE</label>
+        <input id="urlInput" type="url" placeholder="https://www.echecs.asso.fr/Resultats.aspx?URL=...&Action=Cl"/>
+        <button id="btnFetch">Charger via URL</button>
+    </div>
+
+    <div class="hint">Collez une URL FFE puis cliquez sur « Charger via URL » avant d'utiliser les onglets ci‑dessous.<br/>Exemple:
+        https://www.echecs.asso.fr/Resultats.aspx?URL=Tournois/Id/69556/69556&Action=Cl
+    </div>
+
+    <div id="status" class="status"></div>
+</section>
+
+<!-- Tabs header -->
+<div class="tabs" role="tablist" aria-label="Modes d'affichage">
+    <button id="tabBtnTable" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tabTable">Tableau</button>
+    <button id="tabBtnPalmares" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabPalmares">Palmarès</button>
+</div>
+
+<!-- Tab panels -->
+<div id="tabTable" class="tab-panel active" role="tabpanel" tabindex="0">
+    <section class="card">
+        <h2>Filtres</h2>
+        <div class="filters-grid">
+            <label><input type="checkbox" id="fltUnratedAny"/> Non classé (1399 ou 1299)</label>
+            <label><input type="checkbox" id="fltUnratedAdult"/> Adulte non classé (1399)</label>
+            <label><input type="checkbox" id="fltUnratedChild"/> Jeune non classé (1299)</label>
+            <label><input type="checkbox" id="fltFemale"/> Femmes (Cat. genre F)</label>
+        </div>
+        <h2 class="filters-section-title">Elo</h2>
+        <div class="filters-row">
+            <label for="fltEloMin">Min</label>
+            <input type="number" id="fltEloMin" placeholder="ex: 1000"/>
+            <label for="fltEloMax">Max</label>
+            <input type="number" id="fltEloMax" placeholder="ex: 2000"/>
+        </div>
+        <h2 class="filters-section-title">Catégories (abréviations)</h2>
+        <div class="filters-grid">
+            <label><input type="checkbox" id="fltCat_ppo"/> Petit poussin (ppo)</label>
+            <label><input type="checkbox" id="fltCat_pou"/> Poussin (pou)</label>
+            <label><input type="checkbox" id="fltCat_pup"/> Pupille (pup)</label>
+            <label><input type="checkbox" id="fltCat_ben"/> Benjamin (ben)</label>
+            <label><input type="checkbox" id="fltCat_min"/> Minime (min)</label>
+            <label><input type="checkbox" id="fltCat_cad"/> Cadet (cad)</label>
+            <label><input type="checkbox" id="fltCat_jun"/> Junior (jun)</label>
+            <label><input type="checkbox" id="fltCat_sen"/> Sénior (sen)</label>
+            <label><input type="checkbox" id="fltCat_sep"/> Sénior+ (sep)</label>
+            <label><input type="checkbox" id="fltCat_vet"/> Vétéran (vet)</label>
+        </div>
+
+        <div class="toolbar">
+            <div><strong id="count">0</strong> lignes chargées • <strong id="countShown">0</strong> affichées</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="outTable">
+                <thead>
+                <tr>
+                    <th>Pl</th>
+                    <th>Nom</th>
+                    <th>Elo</th>
+                    <th>Cat.</th>
+                    <th>Fede</th>
+                    <th>Ligue</th>
+                    <th>Club</th>
+                    <th>Pts</th>
+                    <th>Tr.</th>
+                    <th>Bu.</th>
+                    <th>Perf</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<div id="tabPalmares" class="tab-panel" role="tabpanel" tabindex="0" hidden>
+    <section class="card">
+        <h2>Palmarès</h2>
+        <p class="hint">Créez vos blocs de prix directement ici. Sélectionnez les catégories et le genre, choisissez le rang (meilleur ou 1-X), puis générez le palmarès.</p>
+
+        <div class="sidebar-actions">
+            <button id="btnAddBlock">+ Ajouter un bloc</button>
+            <button id="btnGenerate" disabled>Générer le palmarès</button>
+            <div id="genStatus" class="status"></div>
+        </div>
+
+        <div id="blocksContainer"></div>
+    </section>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/palmares.js"></script>
+<script src="js/export.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
