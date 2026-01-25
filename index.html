@@ -16,11 +16,15 @@
     <div class="input-row">
         <label for="urlInput">Lien FFE</label>
         <input id="urlInput" type="url" placeholder="https://www.echecs.asso.fr/Resultats.aspx?URL=...&Action=Cl"/>
-        <button id="btnFetch">Charger via URL</button>
+        <button id="btnFetch">Ajouter</button>
     </div>
 
-    <div class="hint">Collez une URL FFE puis cliquez sur « Charger via URL » avant d'utiliser les onglets ci‑dessous.<br/>Exemple:
+    <div class="hint">Collez une URL FFE puis cliquez sur « Ajouter ». Vous pouvez ajouter plusieurs sources.<br/>Exemple:
         https://www.echecs.asso.fr/Resultats.aspx?URL=Tournois/Id/69556/69556&Action=Cl
+    </div>
+
+    <div id="sourcesContainer" class="sources-container">
+        <div class="no-sources">Aucune source chargée</div>
     </div>
 
     <div id="status" class="status"></div>

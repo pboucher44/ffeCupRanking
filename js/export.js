@@ -148,20 +148,23 @@ async function renderPalmaresPdf(awards) {
     const centerX = pageWidth / 2;
     let y = 20;
 
-    // Tournament title
-    if (state.tournamentTitle) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text(state.tournamentTitle, centerX, y, { align: 'center' });
-        y += 8;
-    }
-
-    // Tournament URL
-    if (state.tournamentUrl) {
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(10);
-        doc.text(`URL : ${state.tournamentUrl}`, centerX, y, { align: 'center' });
-        y += 12;
+    // Sources titles and URLs
+    if (state.sources.length > 0) {
+        for (const src of state.sources) {
+            if (src.title) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text(src.title, centerX, y, { align: 'center' });
+                y += 6;
+            }
+            if (src.url) {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(9);
+                doc.text(src.url, centerX, y, { align: 'center' });
+                y += 8;
+            }
+        }
+        y += 4;
     }
 
     // Main title

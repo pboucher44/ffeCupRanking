@@ -2,8 +2,9 @@
   Main entry point - UI initialization
 */
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     bindUI();
+    await reloadAllSources();
 });
 
 function initTabs() {
@@ -77,16 +78,17 @@ function bindUI() {
 }
 
 async function onFetchUrl() {
-    const url = qs('#urlInput').value.trim();
+    const urlInput = qs('#urlInput');
+    const url = urlInput.value.trim();
     if (!url) {
         setStatus('Veuillez saisir une URL.');
         return;
     }
-    setStatus('Chargement via URL en cours…');
+    setStatus('Chargement en cours…');
     try {
         const htmlText = await fetchText(url);
-        parseAndDisplay(htmlText, `URL: ${url}`, url);
-        setStatus('Chargé depuis l\'URL.', 'ok');
+        parseAndDisplay(htmlText, '', url);
+        urlInput.value = '';
     } catch (e) {
         console.error(e);
         setStatus("Échec du chargement via l'URL.");

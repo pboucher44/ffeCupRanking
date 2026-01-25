@@ -93,8 +93,8 @@ function renderBlocks() {
                 <label>Max <input class="blk-elo-max input-sm" type="number" value="${b.eloMax || ''}" placeholder="ex: 2000"/></label>
             </div>
             <div class="field-row">
-                <label>Prix (séparés par ;)</label>
-                <input class="blk-prix" type="text" value="${escapeHtml(b.prix || '')}" placeholder="ex: 1er ; 2ème ; 3ème"/>
+                <label>Prix (séparés par | )</label>
+                <input class="blk-prix" type="text" value="${escapeHtml(b.prix || '')}" placeholder="ex: 1er | 2ème | 3ème"/>
             </div>
             <div class="field-row">
                 <label>Catégories</label>
@@ -211,7 +211,7 @@ function getBlocksFromUI() {
         mode: b.mode === 'range' ? 'range' : 'best',
         start: Math.max(1, parseInt(b.start, 10) || 1),
         end: Math.max(1, parseInt(b.end, 10) || 1),
-        prixList: String(b.prix || '').split(';').map(s => s.trim()).filter(Boolean),
+        prixList: String(b.prix || '').split('|').map(s => s.trim()).filter(Boolean),
         categories: Array.isArray(b.categories) ? b.categories.slice() : [],
         gender: b.gender === 'm' || b.gender === 'f' ? b.gender : 'any',
         unrated: ['any','anyUnrated','adult','child'].includes(b.unrated) ? b.unrated : 'any',

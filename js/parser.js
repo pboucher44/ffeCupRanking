@@ -16,7 +16,6 @@ function parseHtmlToRows(htmlText) {
     const titleCell = doc.querySelector('tr.papi_titre td');
     if (titleCell) {
         title = titleCell.textContent.trim();
-        document.title = `FFE — ${title}`;
     }
 
     // Get all ranking rows
@@ -76,17 +75,115 @@ function parseCat(cat) {
     return {isFemale, categoryCode, genre};
 }
 
-function parseAndDisplay(htmlText, sourceLabel = '', url = '') {
+function addSource(htmlText, url) {
     const { rows, title } = parseHtmlToRows(htmlText);
 
-    state.rows = rows;
-    state.tournamentTitle = title;
-    state.tournamentUrl = url;
+    // Check if URL already loaded
+    const existing = state.sources.find(s => s.url === url);
+    if (existing) {
+        return { added: false, reason: 'already_loaded', title };
+    }
+
+    // Add source with its rows
+    state.sources.push({ url, title, rows });
+
+    // Merge all rows from all sources
+    rebuildRows();
+    persistSourceUrls();
+
+    return { added: true, title, rowCount: rows.length };
+}
+
+function removeSource(url) {
+    const idx = state.sources.findIndex(s => s.url === url);
+    if (idx === -1) return false;
+
+    state.sources.splice(idx, 1);
+    rebuildRows();
+    persistSourceUrls();
+    return true;
+}
+
+function persistSourceUrls() {
+    try {
+        const urls = state.sources.map(s => s.url);
+        localStorage.setItem('sourceUrlsV1', JSON.stringify(urls));
+    } catch (e) { /* ignore */ }
+}
+
+function loadSourceUrls() {
+    try {
+        const raw = localStorage.getItem('sourceUrlsV1');
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+
+async function reloadAllSources() {
+    const urls = loadSourceUrls();
+    if (!urls.length) return;
+
+    setStatus(`Chargement de ${urls.length} source(s)…`);
+
+    for (const url of urls) {
+        try {
+            const htmlText = await fetchText(url);
+            const { rows, title } = parseHtmlToRows(htmlText);
+            state.sources.push({ url, title, rows });
+        } catch (e) {
+            console.error('Failed to reload:', url, e);
+        }
+    }
+
+    rebuildRows();
+    if (state.sources.length > 0) {
+        setStatus(`${state.sources.length} source(s) chargée(s).`, 'ok');
+    } else {
+        setStatus('');
+    }
+}
+
+function rebuildRows() {
+    // Merge all rows from all sources
+    state.rows = state.sources.flatMap(s => s.rows);
     applyFiltersAndRender();
     updateGenerateEnabled();
+    updateSourcesUI();
 
-    qs('#count').textContent = String(rows.length);
-    if (sourceLabel) {
-        setStatus(`Chargé (${sourceLabel}) — ${rows.length} lignes.`, 'ok');
+    qs('#count').textContent = String(state.rows.length);
+}
+
+function updateSourcesUI() {
+    const container = qs('#sourcesContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (state.sources.length === 0) {
+        container.innerHTML = '<div class="no-sources">Aucune source chargée</div>';
+        return;
+    }
+
+    state.sources.forEach((src, idx) => {
+        const div = document.createElement('div');
+        div.className = 'source-item';
+        div.innerHTML = `
+            <span class="source-title">${escapeHtml(src.title || 'Sans titre')}</span>
+            <span class="source-count">${src.rows.length} lignes</span>
+            <button class="source-remove" data-idx="${idx}" title="Supprimer">×</button>
+        `;
+        div.querySelector('.source-remove').addEventListener('click', () => {
+            removeSource(src.url);
+        });
+        container.appendChild(div);
+    });
+}
+
+// Legacy function for compatibility
+function parseAndDisplay(htmlText, sourceLabel = '', url = '') {
+    const result = addSource(htmlText, url);
+    if (result.added) {
+        setStatus(`Ajouté: ${result.title || 'tournoi'} (${result.rowCount} lignes)`, 'ok');
+    } else {
+        setStatus('Cette URL est déjà chargée.', '');
     }
 }

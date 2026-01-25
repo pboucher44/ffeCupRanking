@@ -6,8 +6,7 @@ const state = {
     rows: [],
     filtered: [],
     awardsBlocks: [],
-    tournamentTitle: '',
-    tournamentUrl: '',
+    sources: [], // Array of {url, title, rows}
 };
 
 // FFE age category codes

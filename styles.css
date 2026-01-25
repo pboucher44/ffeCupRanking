@@ -124,6 +124,57 @@ button:disabled {
     color: #0a5e2a;
 }
 
+/* Sources list */
+.sources-container {
+    margin: 12px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.no-sources {
+    color: #888;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.source-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f3f6ff;
+    border: 1px solid #d6dcf0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+
+.source-title {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.source-count {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.source-remove {
+    padding: 2px 6px;
+    font-size: 1rem;
+    line-height: 1;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #666;
+    border-radius: 4px;
+}
+
+.source-remove:hover {
+    background: #fee;
+    border-color: #e55;
+    color: #c33;
+}
+
 .filters-section-title {
     margin-top: 24px !important;
     margin-bottom: 14px !important;
