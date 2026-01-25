@@ -39,28 +39,25 @@ function buildAwardsFromBlocks(rows, blocks) {
             cand = cand.filter(r => r.eloNum !== null && r.eloNum <= b.eloMax);
         }
 
+        // Sort candidates by tiebreakers
+        const sorted = cand.slice().sort((a, b) => {
+            const ka = byKey(a);
+            const kb = byKey(b);
+            for (let i = 0; i < ka.length; i++) {
+                if (kb[i] !== ka[i]) return kb[i] - ka[i];
+            }
+            return a.placeNum - b.placeNum;
+        });
+
         // Select winners
         let winners = [];
         if (b.mode === 'best') {
-            // Sort by tiebreakers and take the best
-            winners = cand.slice().sort((a, b) => {
-                const ka = byKey(a);
-                const kb = byKey(b);
-                for (let i = 0; i < ka.length; i++) {
-                    if (kb[i] !== ka[i]) return kb[i] - ka[i];
-                }
-                return a.placeNum - b.placeNum;
-            }).slice(0, 1);
+            winners = sorted.slice(0, 1);
         } else {
-            // Take players by their ranking position
-            const a = Math.min(b.start, b.end);
-            const e = Math.max(b.start, b.end);
-            const ranks = [];
-            for (let i = a; i <= e; i++) ranks.push(i);
-            for (const rank of ranks) {
-                const win = cand.find(r => r.placeNum === rank);
-                if (win) winners.push(win);
-            }
+            // Take positions within filtered candidates
+            const start = Math.min(b.start, b.end) - 1;
+            const end = Math.max(b.start, b.end);
+            winners = sorted.slice(start, end);
         }
 
         // Build result lines

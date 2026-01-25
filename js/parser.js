@@ -67,8 +67,8 @@ function parseElo(eloText) {
 
 function parseCat(cat) {
     const text = (cat || '').trim();
-    const isFemale = /[A-Za-zÀ-ÿ]F$/.test(text);
     const base = text.replace(/[\s\u00A0]/g, '');
+    const isFemale = /F$/i.test(base);
     const baseNoGender = base.replace(/[FfMm]$/, '');
     const categoryCode = baseNoGender.toLowerCase();
     const genre = isFemale ? 'f' : 'm';
