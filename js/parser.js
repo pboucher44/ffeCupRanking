@@ -3,7 +3,7 @@
 */
 
 async function fetchText(url) {
-    const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    const resp = await fetch(`https://morning-sun-a396.duc0bu44.workers.dev?apiurl=${encodeURIComponent(url)}`);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     return await resp.text();
 }
