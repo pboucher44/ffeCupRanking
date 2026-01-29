@@ -251,3 +251,99 @@ function parseAndDisplay(htmlText, sourceLabel = '', url = '') {
         setStatus('Cette URL est déjà chargée.', '');
     }
 }
+
+// Configuration export/import
+function exportConfig() {
+    const config = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        sourceUrls: state.sources.map(s => s.url),
+        awardsBlocks: state.awardsBlocks,
+        tournamentOptions: state.tournamentOptions || {}
+    };
+
+    const json = JSON.stringify(config, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ffe-cup-ranking-config-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+async function importConfig() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const config = JSON.parse(text);
+
+            // Validate config structure
+            if (!config.version || !config.awardsBlocks) {
+                setStatus('Format de configuration invalide.', '');
+                return;
+            }
+
+            // Import source URLs
+            if (config.sourceUrls && config.sourceUrls.length) {
+                const existingUrls = state.sources.map(s => s.url);
+                const newUrls = config.sourceUrls.filter(u => !existingUrls.includes(u));
+
+                if (newUrls.length > 0) {
+                    setStatus(`Import de ${newUrls.length} URL(s)...`);
+
+                    for (const url of newUrls) {
+                        try {
+                            const htmlText = await fetchText(url);
+                            const { rows, title } = parseHtmlToRows(htmlText);
+                            state.sources.push({ url, title, rows });
+                            // Initialize tournament options
+                            if (config.tournamentOptions && config.tournamentOptions[url]) {
+                                state.tournamentOptions[url] = config.tournamentOptions[url];
+                            } else if (!state.tournamentOptions[url]) {
+                                state.tournamentOptions[url] = { allowMultipleWinners: true };
+                            }
+                        } catch (err) {
+                            console.error('Failed to load URL:', url, err);
+                        }
+                    }
+                }
+            }
+
+            // Import awards blocks
+            if (config.awardsBlocks) {
+                state.awardsBlocks = config.awardsBlocks;
+            }
+
+            // Import tournament options for existing sources
+            if (config.tournamentOptions) {
+                for (const url of Object.keys(config.tournamentOptions)) {
+                    if (state.sources.find(s => s.url === url)) {
+                        state.tournamentOptions[url] = config.tournamentOptions[url];
+                    }
+                }
+            }
+
+            // Save and rebuild
+            rebuildRows();
+            persistSourceUrls();
+            persistBlocks();
+            persistTournamentOptions();
+
+            setStatus('Configuration importée avec succès.', 'ok');
+        } catch (err) {
+            console.error('Import failed:', err);
+            setStatus('Erreur lors de l\'import de la configuration.', '');
+        }
+    };
+
+    input.click();
+}

@@ -100,8 +100,14 @@
         <p class="hint">Créez vos blocs de prix directement ici. Sélectionnez les catégories et le genre, choisissez le rang (meilleur ou 1-X), puis générez le palmarès.</p>
 
         <div class="sidebar-actions">
-            <button id="btnGenerate" disabled>Générer le palmarès</button>
-            <div id="genStatus" class="status"></div>
+            <div class="left-actions">
+                <button id="btnGenerate" disabled>Générer le palmarès</button>
+                <div id="genStatus" class="status"></div>
+            </div>
+            <div class="config-buttons">
+                <button id="btnExportConfig" type="button">Exporter la config</button>
+                <button id="btnImportConfig" type="button">Importer la config</button>
+            </div>
         </div>
 
         <div id="blocksContainer"></div>

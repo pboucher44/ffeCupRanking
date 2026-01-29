@@ -112,6 +112,10 @@ button:disabled {
     margin: 4px 0 12px;
 }
 
+.sidebar-actions .status {
+    margin-top: 0;
+}
+
 .status {
     margin-top: 8px;
     padding: 8px 10px;
@@ -260,6 +264,29 @@ button:disabled {
     align-items: center;
     flex-wrap: wrap;
     margin-bottom: 10px;
+    justify-content: space-between;
+}
+
+.left-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.config-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.config-buttons button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    background: #1f6feb;
+}
+
+.config-buttons button:hover {
+    background: #1a61d0;
 }
 
 /* Palmarès blocks */

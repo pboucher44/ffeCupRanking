@@ -60,6 +60,13 @@ function bindUI() {
     const btnGenerate = qs('#btnGenerate');
     if (btnGenerate) btnGenerate.addEventListener('click', onGenerate);
 
+    // Config export/import
+    const btnExportConfig = qs('#btnExportConfig');
+    if (btnExportConfig) btnExportConfig.addEventListener('click', exportConfig);
+
+    const btnImportConfig = qs('#btnImportConfig');
+    if (btnImportConfig) btnImportConfig.addEventListener('click', importConfig);
+
     // Load saved blocks
     loadBlocks();
     renderBlocks();
