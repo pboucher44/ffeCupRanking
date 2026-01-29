@@ -88,12 +88,8 @@ function renderBlocks() {
 function renderTournamentContainer(container, sourceUrl, blocksWithIndices) {
     // Find tournament title
     const source = state.sources.find(s => s.url === sourceUrl);
-    const tournamentTitleRaw = source ? (source.title || 'Sans titre') : 'Sans titre';
-
-    // Replace <br> with spaces for UI display
-    const div = document.createElement('div');
-    div.innerHTML = tournamentTitleRaw;
-    const tournamentTitle = div.textContent.trim().replace(/<br\s*\/?>/gi, ' ');
+    // Replace <br> with spaces for UI display (keep <br> for PDF)
+    const tournamentTitle = (source ? (source.title || 'Sans titre') : 'Sans titre').replace(/<br\s*\/?>/gi, ' ').trim();
 
     // Get tournament options
     const allowMultiple = getTournamentOption(sourceUrl, 'allowMultipleWinners', true);

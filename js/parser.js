@@ -232,9 +232,8 @@ function updateTableTournamentSelector() {
         const opt = document.createElement('option');
         opt.value = src.url;
         // Replace <br> with spaces for UI display
-        const div = document.createElement('div');
-        div.innerHTML = src.title || 'Sans titre';
-        opt.textContent = div.textContent.trim().replace(/<br\s*\/?>/gi, ' ');
+        const cleanTitle = (src.title || 'Sans titre').replace(/<br\s*\/?>/gi, ' ');
+        opt.textContent = cleanTitle.trim();
         select.appendChild(opt);
     });
 
@@ -264,8 +263,12 @@ function updateSourcesUI() {
     state.sources.forEach((src, idx) => {
         const div = document.createElement('div');
         div.className = 'source-item';
+
+        // Replace <br> with spaces for UI display (keep <br> for PDF)
+        const cleanTitle = (src.title || 'Sans titre').replace(/<br\s*\/?>/gi, ' ');
+
         div.innerHTML = `
-            <span class="source-title">${escapeHtml(src.title || 'Sans titre')}</span>
+            <span class="source-title">${escapeHtml(cleanTitle)}</span>
             <span class="source-count">${src.rows.length} lignes</span>
             <button class="source-remove" data-idx="${idx}" title="Supprimer">×</button>
         `;
