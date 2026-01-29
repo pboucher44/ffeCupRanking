@@ -2,9 +2,12 @@
   PDF generation and export
 */
 
-function buildAwardsFromBlocks(rows, blocks) {
+function buildAwardsFromBlocks(rows, blocks, allowMultiple = true) {
     const results = [];
     const byKey = (r) => [r.ptsNum, r.buNum, r.perfNum, r.eloNum].map(x => (isFinite(x) ? x : -Infinity));
+
+    // Keep track of winners across all blocks to avoid duplicates
+    const winnerNames = new Set();
 
     for (const b of blocks) {
         let cand = rows.slice();
@@ -56,20 +59,37 @@ function buildAwardsFromBlocks(rows, blocks) {
 
         // Select winners
         let winners = [];
-        if (b.mode === 'best') {
-            winners = sorted.slice(0, 1);
+        if (!allowMultiple) {
+            // Filter out already winners
+            const sortedWithoutWinners = sorted.filter(r => !winnerNames.has(r.name));
+            if (b.mode === 'best') {
+                winners = sortedWithoutWinners.slice(0, 1);
+            } else {
+                const start = Math.min(b.start, b.end) - 1;
+                const end = Math.max(b.start, b.end);
+                winners = sortedWithoutWinners.slice(start, end);
+            }
         } else {
-            // Take positions within filtered candidates
-            const start = Math.min(b.start, b.end) - 1;
-            const end = Math.max(b.start, b.end);
-            winners = sorted.slice(start, end);
+            // Allow multiple winners (default behavior)
+            if (b.mode === 'best') {
+                winners = sorted.slice(0, 1);
+            } else {
+                // Take positions within filtered candidates
+                const start = Math.min(b.start, b.end) - 1;
+                const end = Math.max(b.start, b.end);
+                winners = sorted.slice(start, end);
+            }
         }
 
         // Build result lines
         const lines = [];
         if (b.mode === 'best') {
             const label = b.prixList[0] || 'Prix';
-            lines.push({label, winner: winners[0] || null});
+            const winner = winners[0] || null;
+            if (winner && !allowMultiple) {
+                winnerNames.add(winner.name);
+            }
+            lines.push({label, winner});
         } else {
             const a = Math.min(b.start, b.end);
             const e = Math.max(b.start, b.end);
@@ -77,6 +97,9 @@ function buildAwardsFromBlocks(rows, blocks) {
             for (let rank = a; rank <= e; rank++) {
                 const label = b.prixList[i] || `Place ${rank}`;
                 const w = winners[i] || null;
+                if (w && !allowMultiple) {
+                    winnerNames.add(w.name);
+                }
                 lines.push({label, winner: w});
                 i++;
             }
@@ -120,8 +143,26 @@ async function onGenerate() {
             genre: (typeof r.genre === 'string' ? r.genre : (parseCat(r.cat).genre)),
         }));
 
-        const awards = buildAwardsFromBlocks(enriched, blocks);
-        const pdfBytes = await renderPalmaresPdf(awards);
+        // Group blocks by sourceUrl (tournament)
+        const blocksBySource = {};
+        blocks.forEach(b => {
+            const url = b.sourceUrl || '';
+            if (!blocksBySource[url]) {
+                blocksBySource[url] = [];
+            }
+            blocksBySource[url].push(b);
+        });
+
+        // Build awards for each tournament with its own allowMultiple option
+        const allAwards = [];
+        for (const sourceUrl of Object.keys(blocksBySource)) {
+            const allowMultiple = getTournamentOption(sourceUrl, 'allowMultipleWinners', true);
+            const tournamentBlocks = blocksBySource[sourceUrl];
+            const tournamentAwards = buildAwardsFromBlocks(enriched, tournamentBlocks, allowMultiple);
+            allAwards.push(...tournamentAwards);
+        }
+
+        const pdfBytes = await renderPalmaresPdf(allAwards);
 
         // Auto-download PDF
         if (pdfBytes && pdfBytes.byteLength) {

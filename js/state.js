@@ -6,6 +6,7 @@ const state = {
     rows: [],
     filtered: [],
     awardsBlocks: [],
+    tournamentOptions: {}, // { url: { allowMultipleWinners: true } }
     sources: [], // Array of {url, title, rows}
 };
 

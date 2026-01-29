@@ -87,9 +87,17 @@ function addSource(htmlText, url) {
     // Add source with its rows
     state.sources.push({ url, title, rows });
 
+    // Initialize tournament options with default values
+    if (!state.tournamentOptions[url]) {
+        state.tournamentOptions[url] = {
+            allowMultipleWinners: true // Default: allow multiple winners
+        };
+    }
+
     // Merge all rows from all sources
     rebuildRows();
     persistSourceUrls();
+    persistTournamentOptions();
 
     return { added: true, title, rowCount: rows.length };
 }
@@ -104,6 +112,12 @@ function removeSource(url) {
     state.awardsBlocks = state.awardsBlocks.filter(b => b.sourceUrl !== url);
     persistBlocks();
 
+    // Remove tournament options
+    if (state.tournamentOptions[url]) {
+        delete state.tournamentOptions[url];
+        persistTournamentOptions();
+    }
+
     rebuildRows();
     persistSourceUrls();
     return true;
@@ -114,6 +128,41 @@ function persistSourceUrls() {
         const urls = state.sources.map(s => s.url);
         localStorage.setItem('sourceUrlsV1', JSON.stringify(urls));
     } catch (e) { /* ignore */ }
+}
+
+function persistTournamentOptions() {
+    try {
+        localStorage.setItem('tournamentOptionsV1', JSON.stringify(state.tournamentOptions || {}));
+    } catch (e) { /* ignore */ }
+}
+
+function loadTournamentOptions() {
+    try {
+        const raw = localStorage.getItem('tournamentOptionsV1');
+        if (raw) {
+            state.tournamentOptions = JSON.parse(raw);
+        } else {
+            state.tournamentOptions = {};
+        }
+    } catch (e) { state.tournamentOptions = {}; }
+}
+
+function getTournamentOption(url, key, defaultValue = null) {
+    if (!state.tournamentOptions[url]) {
+        state.tournamentOptions[url] = {};
+    }
+    if (state.tournamentOptions[url][key] === undefined) {
+        return defaultValue;
+    }
+    return state.tournamentOptions[url][key];
+}
+
+function setTournamentOption(url, key, value) {
+    if (!state.tournamentOptions[url]) {
+        state.tournamentOptions[url] = {};
+    }
+    state.tournamentOptions[url][key] = value;
+    persistTournamentOptions();
 }
 
 function loadSourceUrls() {
@@ -129,11 +178,20 @@ async function reloadAllSources() {
 
     setStatus(`Chargement de ${urls.length} source(s)…`);
 
+    // Load tournament options first
+    loadTournamentOptions();
+
     for (const url of urls) {
         try {
             const htmlText = await fetchText(url);
             const { rows, title } = parseHtmlToRows(htmlText);
             state.sources.push({ url, title, rows });
+            // Initialize tournament options if not exists
+            if (!state.tournamentOptions[url]) {
+                state.tournamentOptions[url] = {
+                    allowMultipleWinners: true
+                };
+            }
         } catch (e) {
             console.error('Failed to reload:', url, e);
         }

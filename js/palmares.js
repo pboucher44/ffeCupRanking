@@ -88,7 +88,10 @@ function renderBlocks() {
 function renderTournamentContainer(container, sourceUrl, blocksWithIndices) {
     // Find tournament title
     const source = state.sources.find(s => s.url === sourceUrl);
-    const tournamentTitle = source ? (source.title || 'Sans titre') : 'Tous les tournois';
+    const tournamentTitle = source ? (source.title || 'Sans titre') : 'Sans titre';
+
+    // Get tournament options
+    const allowMultiple = getTournamentOption(sourceUrl, 'allowMultipleWinners', true);
 
     // Create tournament container
     const tourDiv = document.createElement('div');
@@ -98,10 +101,27 @@ function renderTournamentContainer(container, sourceUrl, blocksWithIndices) {
     // Tournament header
     const headerDiv = document.createElement('div');
     headerDiv.className = 'tournament-header';
-    headerDiv.innerHTML = `
-        <h3>${escapeHtml(tournamentTitle)}</h3>
-        <button class="btn-add-block-tournament" data-url="${escapeHtml(sourceUrl)}">+ Ajouter un bloc</button>
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'header-left';
+    titleDiv.innerHTML = `<h3>${escapeHtml(tournamentTitle)}</h3>`;
+
+    const labelDiv = document.createElement('label');
+    labelDiv.className = 'option-checkbox';
+    labelDiv.innerHTML = `
+        <input type="checkbox" ${allowMultiple ? 'checked' : ''} />
+        Permettre plusieurs prix par joueur
     `;
+
+    titleDiv.appendChild(labelDiv);
+    headerDiv.appendChild(titleDiv);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-add-block-tournament';
+    addBtn.textContent = '+ Ajouter un bloc';
+    addBtn.dataset.url = sourceUrl;
+    headerDiv.appendChild(addBtn);
+
     tourDiv.appendChild(headerDiv);
 
     // Blocks container for this tournament
@@ -251,12 +271,20 @@ function renderTournamentContainer(container, sourceUrl, blocksWithIndices) {
     container.appendChild(tourDiv);
 
     // Add block button handler
-    headerDiv.querySelector('.btn-add-block-tournament').addEventListener('click', () => {
+    addBtn.addEventListener('click', () => {
         addBlock(sourceUrl);
         persistBlocks();
         renderBlocks();
         updateGenerateEnabled();
     });
+
+    // Add checkbox handler for allowMultipleWinners option
+    const checkbox = labelDiv.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+            setTournamentOption(sourceUrl, 'allowMultipleWinners', e.target.checked);
+        });
+    }
 }
 
 function getBlocksFromUI() {

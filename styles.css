@@ -280,11 +280,30 @@ button:disabled {
     border-radius: 8px 8px 0 0;
 }
 
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .tournament-header h3 {
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
     color: #14213d;
+}
+
+.option-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.option-checkbox input[type="checkbox"] {
+    cursor: pointer;
 }
 
 .btn-add-block-tournament {
