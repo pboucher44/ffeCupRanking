@@ -17,6 +17,11 @@ function applyFiltersAndRender() {
 
     let arr = state.rows.slice();
 
+    // First filter by selected tournament (Table view)
+    if (state.selectedTableSourceUrl) {
+        arr = arr.filter(r => r.sourceUrl === state.selectedTableSourceUrl);
+    }
+
     // Apply filters (AND logic)
     if (flt.unratedAny) {
         arr = arr.filter(r => r.isUnrated1399 || r.isUnrated1299);
@@ -49,8 +54,22 @@ function applyFiltersAndRender() {
 
     state.filtered = arr;
     renderTable(arr);
+
     const countShown = qs('#countShown');
     if (countShown) countShown.textContent = String(arr.length);
+
+    // Update count text based on tournament selection
+    const countEl = qs('#count');
+    if (countEl) {
+        const source = state.sources.find(s => s.url === state.selectedTableSourceUrl);
+        const tournamentTitleRaw = source ? (source.title || 'tournoi') : 'tournoi';
+        // Replace <br> with spaces for display
+        const div = document.createElement('div');
+        div.innerHTML = tournamentTitleRaw;
+        const tournamentName = div.textContent.trim().replace(/<br\s*\/?>/gi, ' ');
+        countEl.textContent = String(arr.length);
+        countEl.parentElement.innerHTML = `<strong id="count">${arr.length}</strong> joueurs dans ${escapeHtml(tournamentName)}`;
+    }
 }
 
 function renderTable(rows) {

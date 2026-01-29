@@ -15,7 +15,8 @@ function parseHtmlToRows(htmlText) {
     let title = '';
     const titleCell = doc.querySelector('tr.papi_titre td');
     if (titleCell) {
-        title = titleCell.textContent.trim();
+        // Use innerHTML to get content, keep <br> for PDF export
+        title = titleCell.innerHTML.trim();
     }
 
     // Get all ranking rows
@@ -208,12 +209,45 @@ async function reloadAllSources() {
 function rebuildRows() {
     // Merge all rows from all sources, adding sourceUrl to each row
     state.rows = state.sources.flatMap(s => s.rows.map(r => ({ ...r, sourceUrl: s.url })));
+
+    // Update tournament selector first to set state.selectedTableSourceUrl
+    updateTableTournamentSelector();
+
     applyFiltersAndRender();
     updateGenerateEnabled();
     updateSourcesUI();
     renderBlocks(); // Refresh tournament containers in palmares
+}
 
-    qs('#count').textContent = String(state.rows.length);
+function updateTableTournamentSelector() {
+    const select = qs('#tableTournamentSelect');
+    if (!select) return;
+
+    // Save current selection
+    const currentValue = select.value;
+
+    // Clear and rebuild options (no "All tournaments" option)
+    select.innerHTML = '';
+    state.sources.forEach(src => {
+        const opt = document.createElement('option');
+        opt.value = src.url;
+        // Replace <br> with spaces for UI display
+        const div = document.createElement('div');
+        div.innerHTML = src.title || 'Sans titre';
+        opt.textContent = div.textContent.trim().replace(/<br\s*\/?>/gi, ' ');
+        select.appendChild(opt);
+    });
+
+    // Restore selection if still valid, otherwise select first source
+    if (currentValue && state.sources.find(s => s.url === currentValue)) {
+        select.value = currentValue;
+        state.selectedTableSourceUrl = currentValue;
+    } else if (state.sources.length > 0) {
+        select.value = state.sources[0].url;
+        state.selectedTableSourceUrl = state.sources[0].url;
+    } else {
+        state.selectedTableSourceUrl = '';
+    }
 }
 
 function updateSourcesUI() {

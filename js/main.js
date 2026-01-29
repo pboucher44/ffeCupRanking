@@ -56,6 +56,15 @@ function bindUI() {
     if (eloMin) eloMin.addEventListener('input', applyFiltersAndRender);
     if (eloMax) eloMax.addEventListener('input', applyFiltersAndRender);
 
+    // Table tournament selector
+    const tableTournamentSelect = qs('#tableTournamentSelect');
+    if (tableTournamentSelect) {
+        tableTournamentSelect.addEventListener('change', (e) => {
+            state.selectedTableSourceUrl = e.target.value;
+            applyFiltersAndRender();
+        });
+    }
+
     // Awards UI
     const btnGenerate = qs('#btnGenerate');
     if (btnGenerate) btnGenerate.addEventListener('click', onGenerate);

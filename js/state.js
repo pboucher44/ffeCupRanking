@@ -8,6 +8,7 @@ const state = {
     awardsBlocks: [],
     tournamentOptions: {}, // { url: { allowMultipleWinners: true } }
     sources: [], // Array of {url, title, rows}
+    selectedTableSourceUrl: '', // Tournament selected for the Table view ('' = all)
 };
 
 // FFE age category codes

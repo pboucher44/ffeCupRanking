@@ -226,11 +226,21 @@ async function renderPalmaresPdf(awards) {
         // Find source info
         const source = state.sources.find(s => s.url === sourceUrl);
 
-        // Tournament title
+        // Tournament title (handle <br> tags)
         if (source && source.title) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(16);
-            doc.text(source.title, centerX, y, { align: 'center' });
+
+            // More permissive regex to match <br> tags
+            const titleLines = source.title.split(/<br\s*\/?>/gi);
+
+            titleLines.forEach((line, idx) => {
+                if (idx > 0) y += 8;
+                const div = document.createElement('div');
+                div.innerHTML = line;
+                const cleanLine = div.textContent.trim();
+                doc.text(cleanLine, centerX, y, { align: 'center' });
+            });
             y += 8;
         }
 

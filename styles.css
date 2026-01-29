@@ -197,6 +197,27 @@ button:disabled {
     gap: 8px 16px;
 }
 
+.tournament-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 12px 0;
+    padding: 12px;
+    background: #f3f6ff;
+    border: 1px solid #d6dcf0;
+    border-radius: 6px;
+}
+
+.tournament-selector label {
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.tournament-selector select {
+    flex: 1;
+    min-width: 200px;
+}
+
 .toolbar {
     display: flex;
     align-items: center;
