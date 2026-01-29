@@ -2,10 +2,44 @@
   FFE HTML parsing
 */
 
+// List of CORS proxies to try in order (fallback mechanism)
+const CORS_PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?url=',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://thingproxy.freeboard.io/fetch/'
+];
+
 async function fetchText(url) {
-    const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    return await resp.text();
+    // Try each proxy until one succeeds
+    for (const proxy of CORS_PROXIES) {
+        try {
+            let proxyUrl;
+            // Different proxies have different URL encoding patterns
+            if (proxy.includes('allorigins')) {
+                proxyUrl = `${proxy}${encodeURIComponent(url)}`;
+            } else if (proxy.includes('thingproxy')) {
+                proxyUrl = `${proxy}${encodeURIComponent(url)}`;
+            } else if (proxy.includes('cors-anywhere')) {
+                // cors-anywhere requires full URL without encoding
+                proxyUrl = `${proxy}${url}`;
+            } else {
+                proxyUrl = `${proxy}${encodeURIComponent(url)}`;
+            }
+
+            const resp = await fetch(proxyUrl);
+            if (resp.ok) {
+                return await resp.text();
+            }
+        } catch (e) {
+            console.warn(`Proxy ${proxy} failed:`, e.message);
+            // Continue to next proxy
+        }
+    }
+
+    // All proxies failed
+    throw new Error('All CORS proxies failed');
 }
 
 function parseHtmlToRows(htmlText) {
