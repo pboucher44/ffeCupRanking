@@ -263,6 +263,39 @@ button:disabled {
 }
 
 /* Palmarès blocks */
+.tournament-container {
+    border: 1px solid #d6dcf0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background: #f7f8fb;
+}
+
+.tournament-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #f3f6ff;
+    border-bottom: 1px solid #d6dcf0;
+    border-radius: 8px 8px 0 0;
+}
+
+.tournament-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #14213d;
+}
+
+.btn-add-block-tournament {
+    padding: 4px 12px;
+    font-size: 0.9rem;
+}
+
+.tournament-blocks {
+    padding: 16px;
+}
+
 .award-block {
     border: 1px solid #e6e8ef;
     border-radius: 8px;

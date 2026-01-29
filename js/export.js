@@ -9,6 +9,11 @@ function buildAwardsFromBlocks(rows, blocks) {
     for (const b of blocks) {
         let cand = rows.slice();
 
+        // Filter by sourceUrl (tournament)
+        if (b.sourceUrl) {
+            cand = cand.filter(r => r.sourceUrl === b.sourceUrl);
+        }
+
         // Filter by categories
         if (b.categories && b.categories.length) {
             const set = new Set(b.categories);
@@ -77,7 +82,7 @@ function buildAwardsFromBlocks(rows, blocks) {
             }
         }
 
-        results.push({ titre: b.titre, lines });
+        results.push({ titre: b.titre, lines, sourceUrl: b.sourceUrl || '' });
     }
 
     return results;
@@ -143,81 +148,114 @@ async function renderPalmaresPdf(awards) {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const centerX = pageWidth / 2;
-    let y = 20;
 
-    // Sources titles and URLs
-    if (state.sources.length > 0) {
-        for (const src of state.sources) {
-            if (src.title) {
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text(src.title, centerX, y, { align: 'center' });
-                y += 6;
-            }
-            if (src.url) {
-                doc.setFont('helvetica', 'italic');
-                doc.setFontSize(9);
-                doc.text(src.url, centerX, y, { align: 'center' });
-                y += 8;
-            }
+    // Group awards by sourceUrl (tournament)
+    const awardsBySource = new Map();
+    for (const award of awards) {
+        const key = award.sourceUrl || '';
+        if (!awardsBySource.has(key)) {
+            awardsBySource.set(key, []);
         }
-        y += 4;
+        awardsBySource.get(key).push(award);
     }
 
-    // Main title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('Palmarès des Récompenses', centerX, y, { align: 'center' });
-    y += 12;
+    // Determine page order: specific sources first
+    const sourceOrder = [];
+    for (const src of state.sources) {
+        if (awardsBySource.has(src.url)) {
+            sourceOrder.push(src.url);
+        }
+    }
 
-    // Award blocks
-    doc.setFontSize(11);
-    for (const blk of awards) {
-        if (y > 270) { doc.addPage(); y = 20; }
+    let isFirstPage = true;
 
-        // Block title (uppercase, centered)
+    // Render one page per tournament
+    for (const sourceUrl of sourceOrder) {
+        const sourceAwards = awardsBySource.get(sourceUrl);
+        if (!sourceAwards || sourceAwards.length === 0) continue;
+
+        // Add new page (except for first)
+        if (!isFirstPage) {
+            doc.addPage();
+        }
+        isFirstPage = false;
+
+        let y = 20;
+
+        // Find source info
+        const source = state.sources.find(s => s.url === sourceUrl);
+
+        // Tournament title
+        if (source && source.title) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text(source.title, centerX, y, { align: 'center' });
+            y += 8;
+        }
+
+        // Tournament URL
+        if (source && source.url) {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(9);
+            doc.text(source.url, centerX, y, { align: 'center' });
+            y += 8;
+        }
+
+        // Main title
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text(blk.titre.toUpperCase(), centerX, y, { align: 'center' });
-        y += 8;
+        doc.setFontSize(14);
+        doc.text('Palmarès des Récompenses', centerX, y, { align: 'center' });
+        y += 12;
 
-        // Award lines
+        // Award blocks for this tournament
         doc.setFontSize(11);
-        for (const l of blk.lines) {
-            if (y > 280) { doc.addPage(); y = 20; }
+        for (const blk of sourceAwards) {
+            if (y > 270) { doc.addPage(); y = 20; }
 
-            const w = l.winner;
-            if (w) {
-                // Label (bold)
-                doc.setFont('helvetica', 'bold');
-                const labelText = `${l.label} : `;
-                doc.text(labelText, 15, y);
-                const labelWidth = doc.getTextWidth(labelText);
+            // Block title (uppercase, centered)
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.text(blk.titre.toUpperCase(), centerX, y, { align: 'center' });
+            y += 8;
 
-                // Name (bold)
-                const nameText = `${w.name} - `;
-                doc.text(nameText, 15 + labelWidth, y);
-                const nameWidth = doc.getTextWidth(nameText);
+            // Award lines
+            doc.setFontSize(11);
+            for (const l of blk.lines) {
+                if (y > 280) { doc.addPage(); y = 20; }
 
-                // Club (italic)
-                doc.setFont('helvetica', 'italic');
-                const clubText = `${w.club || '?'} - `;
-                doc.text(clubText, 15 + labelWidth + nameWidth, y);
-                const clubWidth = doc.getTextWidth(clubText);
+                const w = l.winner;
+                if (w) {
+                    // Label (bold)
+                    doc.setFont('helvetica', 'bold');
+                    const labelText = `${l.label} : `;
+                    doc.text(labelText, 15, y);
+                    const labelWidth = doc.getTextWidth(labelText);
 
-                // Stats (normal)
-                doc.setFont('helvetica', 'normal');
-                const statsText = `(Clt ${w.placeNum}, ${w.ptsNum} pts)`;
-                doc.text(statsText, 15 + labelWidth + nameWidth + clubWidth, y);
-            } else {
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${l.label} : `, 15, y);
-                doc.setFont('helvetica', 'normal');
-                doc.text('—', 15 + doc.getTextWidth(`${l.label} : `), y);
+                    // Name (bold)
+                    const nameText = `${w.name} - `;
+                    doc.text(nameText, 15 + labelWidth, y);
+                    const nameWidth = doc.getTextWidth(nameText);
+
+                    // Club (italic)
+                    doc.setFont('helvetica', 'italic');
+                    const clubText = `${w.club || '?'} - `;
+                    doc.text(clubText, 15 + labelWidth + nameWidth, y);
+                    const clubWidth = doc.getTextWidth(clubText);
+
+                    // Stats (normal)
+                    doc.setFont('helvetica', 'normal');
+                    const statsText = `(Clt ${w.placeNum}, ${w.ptsNum} pts)`;
+                    doc.text(statsText, 15 + labelWidth + nameWidth + clubWidth, y);
+                } else {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${l.label} : `, 15, y);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('—', 15 + doc.getTextWidth(`${l.label} : `), y);
+                }
+                y += 6;
             }
             y += 6;
         }
-        y += 6;
     }
 
     return doc.output('arraybuffer');

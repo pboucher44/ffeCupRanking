@@ -99,6 +99,11 @@ function removeSource(url) {
     if (idx === -1) return false;
 
     state.sources.splice(idx, 1);
+
+    // Remove blocks for this source
+    state.awardsBlocks = state.awardsBlocks.filter(b => b.sourceUrl !== url);
+    persistBlocks();
+
     rebuildRows();
     persistSourceUrls();
     return true;
@@ -143,11 +148,12 @@ async function reloadAllSources() {
 }
 
 function rebuildRows() {
-    // Merge all rows from all sources
-    state.rows = state.sources.flatMap(s => s.rows);
+    // Merge all rows from all sources, adding sourceUrl to each row
+    state.rows = state.sources.flatMap(s => s.rows.map(r => ({ ...r, sourceUrl: s.url })));
     applyFiltersAndRender();
     updateGenerateEnabled();
     updateSourcesUI();
+    renderBlocks(); // Refresh tournament containers in palmares
 
     qs('#count').textContent = String(state.rows.length);
 }

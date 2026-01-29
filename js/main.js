@@ -57,22 +57,11 @@ function bindUI() {
     if (eloMax) eloMax.addEventListener('input', applyFiltersAndRender);
 
     // Awards UI
-    const btnAddBlock = qs('#btnAddBlock');
-    if (btnAddBlock) btnAddBlock.addEventListener('click', () => {
-        addBlock();
-        renderBlocks();
-        persistBlocks();
-        updateGenerateEnabled();
-    });
-
     const btnGenerate = qs('#btnGenerate');
     if (btnGenerate) btnGenerate.addEventListener('click', onGenerate);
 
-    // Load saved blocks or create default
+    // Load saved blocks
     loadBlocks();
-    if (!state.awardsBlocks || state.awardsBlocks.length === 0) {
-        state.awardsBlocks = [defaultBlock()];
-    }
     renderBlocks();
     updateGenerateEnabled();
 }

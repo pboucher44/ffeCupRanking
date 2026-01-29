@@ -2,7 +2,7 @@
   Awards blocks management
 */
 
-function defaultBlock() {
+function defaultBlock(sourceUrl = '') {
     return {
         titre: 'Bloc de prix',
         mode: 'best',
@@ -14,6 +14,7 @@ function defaultBlock() {
         unrated: 'any',
         eloMin: null,
         eloMax: null,
+        sourceUrl: sourceUrl, // Link block to a tournament
     };
 }
 
@@ -36,8 +37,8 @@ function updateGenerateEnabled() {
     btnGen.disabled = !(state.awardsBlocks && state.awardsBlocks.length > 0 && state.rows.length > 0);
 }
 
-function addBlock() {
-    state.awardsBlocks.push(defaultBlock());
+function addBlock(sourceUrl = '') {
+    state.awardsBlocks.push(defaultBlock(sourceUrl));
 }
 
 function duplicateBlock(idx) {
@@ -66,7 +67,49 @@ function renderBlocks() {
     const cont = qs('#blocksContainer');
     if (!cont) return;
     cont.innerHTML = '';
+
+    // Group blocks by sourceUrl (tournament)
+    const blocksBySource = {};
     state.awardsBlocks.forEach((b, idx) => {
+        const url = b.sourceUrl || '';
+        if (!blocksBySource[url]) {
+            blocksBySource[url] = [];
+        }
+        blocksBySource[url].push({ block: b, index: idx });
+    });
+
+    // Render a container for each loaded tournament (even if no blocks)
+    state.sources.forEach(src => {
+        const blocks = blocksBySource[src.url] || [];
+        renderTournamentContainer(cont, src.url, blocks);
+    });
+}
+
+function renderTournamentContainer(container, sourceUrl, blocksWithIndices) {
+    // Find tournament title
+    const source = state.sources.find(s => s.url === sourceUrl);
+    const tournamentTitle = source ? (source.title || 'Sans titre') : 'Tous les tournois';
+
+    // Create tournament container
+    const tourDiv = document.createElement('div');
+    tourDiv.className = 'tournament-container';
+    tourDiv.dataset.sourceUrl = sourceUrl;
+
+    // Tournament header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'tournament-header';
+    headerDiv.innerHTML = `
+        <h3>${escapeHtml(tournamentTitle)}</h3>
+        <button class="btn-add-block-tournament" data-url="${escapeHtml(sourceUrl)}">+ Ajouter un bloc</button>
+    `;
+    tourDiv.appendChild(headerDiv);
+
+    // Blocks container for this tournament
+    const blocksDiv = document.createElement('div');
+    blocksDiv.className = 'tournament-blocks';
+
+    // Render each block
+    blocksWithIndices.forEach(({ block: b, index: idx }) => {
         const div = document.createElement('div');
         div.className = 'award-block';
         div.innerHTML = `
@@ -201,7 +244,18 @@ function renderBlocks() {
             updateGenerateEnabled();
         });
 
-        cont.appendChild(div);
+        blocksDiv.appendChild(div);
+    });
+
+    tourDiv.appendChild(blocksDiv);
+    container.appendChild(tourDiv);
+
+    // Add block button handler
+    headerDiv.querySelector('.btn-add-block-tournament').addEventListener('click', () => {
+        addBlock(sourceUrl);
+        persistBlocks();
+        renderBlocks();
+        updateGenerateEnabled();
     });
 }
 
@@ -217,5 +271,6 @@ function getBlocksFromUI() {
         unrated: ['any','anyUnrated','adult','child'].includes(b.unrated) ? b.unrated : 'any',
         eloMin: b.eloMin || null,
         eloMax: b.eloMax || null,
+        sourceUrl: b.sourceUrl || '', // Include sourceUrl
     }));
 }
